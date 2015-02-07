@@ -22,7 +22,7 @@ use std::num::{Float, Int};
 use std::ops::Index;
 use std::str::{FromStr};
 use std::string;
-use std::{char, f64, fmt, io, num, str};
+use std::{char, f64, fmt, old_io, num, str};
 use std;
 
 use rustc_serialize::{Encodable, Decodable};
@@ -32,6 +32,8 @@ use rustc_serialize::Decoder as SerializeDecoder;
 use xml;
 use xml::EventReader;
 use xml::reader::events;
+
+use std::old_io::BufferedReader;
 
 /// Represents an XML-RPC data value
 #[derive(Clone, PartialEq, PartialOrd, Show)]
@@ -66,7 +68,7 @@ pub enum ErrorCode {
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
-    IoError(&'static str),
+    IoError(old_io::IoErrorKind, &'static str),
 }
 
 // Builder and Parser have the same errors.
@@ -119,13 +121,24 @@ impl fmt::Show for ErrorCode {
     }
 }
 
-fn io_error_to_error(io: io::IoError) -> ParserError {
-    ParserError::IoError(io.kind, io.desc)
+fn io_error_to_error(old_io: old_io::IoError) -> ParserError {
+    ParserError::IoError(old_io.kind, old_io.desc)
 }
+
+// impl fmt::Display for DecoderError {
+//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+//         fmt.write_str(error::Error::description(self))
+//     }
+// }
+// impl fmt::Display for ParserError {
+//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+//         fmt.write_str(error::Error::description(self))
+//     }
+// }
 
 impl StdError for DecoderError {
     fn description(&self) -> &str { "decoder error" }
-    fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
+    // fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
     fn cause(&self) -> Option<&StdError> {
         match *self {
             DecoderError::ParseError(ref e) => Some(e as &StdError),
@@ -136,7 +149,7 @@ impl StdError for DecoderError {
 
 impl StdError for ParserError {
     fn description(&self) -> &str { "failed to parse xml" }
-    fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
+    // fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
 }
 
 pub type EncodeResult = fmt::Result;
@@ -418,8 +431,8 @@ impl Xml {
     pub fn from_str(s: &str) -> Result<Self, BuilderError> {
         //let mut builder = Builder::new(s.chars());
         //builder.build()
-        let rdr = io::MemReader::new(String::from_str(s).into_bytes());
-        let brdr = io::BufferedReader::new(rdr);
+        let rdr = old_io::MemReader::new(String::from_str(s).into_bytes());
+        let brdr = BufferedReader::new(rdr);
         let mut builder = Builder::new(brdr);
         builder.build()
     }
