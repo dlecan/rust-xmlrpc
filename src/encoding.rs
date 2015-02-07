@@ -66,7 +66,7 @@ pub enum ErrorCode {
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
-    IoError(io::IoErrorKind, &'static str),
+    IoError(&'static str),
 }
 
 // Builder and Parser have the same errors.
