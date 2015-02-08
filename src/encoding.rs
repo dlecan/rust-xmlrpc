@@ -125,6 +125,18 @@ fn io_error_to_error(old_io: old_io::IoError) -> ParserError {
     ParserError::IoError(old_io.kind, old_io.desc)
 }
 
+impl fmt::String for DecoderError{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        error_str(*self).fmt(f)
+    }
+}
+
+impl fmt::String for ParserError{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        error_str(*self).fmt(f)
+    }
+}
+
 // impl fmt::Display for DecoderError {
 //     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
 //         fmt.write_str(error::Error::description(self))
