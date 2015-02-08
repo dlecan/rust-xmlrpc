@@ -1016,7 +1016,7 @@ macro_rules! read_primitive {
         fn $name(&mut self) -> DecodeResult<$ty> {
             match self.pop() {
                 Xml::I32(f) => match num::cast(f) {
-                    Ok(f) => Ok(f),
+                    Some(f) => Ok(f),
                     _ => Err(ExpectedError("Number".to_string(), format!("{}", f))),
                 },
                 Xml::F64(f) => Err(ExpectedError("Integer".to_string(), format!("{}", f))),
