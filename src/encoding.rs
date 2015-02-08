@@ -36,7 +36,7 @@ use xml::reader::events;
 use std::old_io::BufferedReader;
 
 /// Represents an XML-RPC data value
-#[derive(Clone, PartialEq, PartialOrd, Show)]
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub enum Xml {
      I32(i32),
      F64(f64),
@@ -64,7 +64,7 @@ pub enum ErrorCode {
     EOFWhileParsingString,
 }
 
-#[derive(Clone, Copy, PartialEq, Show)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
@@ -74,7 +74,7 @@ pub enum ParserError {
 // Builder and Parser have the same errors.
 pub type BuilderError = ParserError;
 
-#[derive(Clone, PartialEq, Show)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum DecoderError {
     ParseError(ParserError),
     ExpectedError(string::String, string::String),
@@ -636,7 +636,7 @@ impl Index<usize> for Xml {
 }
 
 /// The output of the streaming parser.
-#[derive(PartialEq, Clone, Show)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum XmlEvent {
     ObjectStart, // <struct>
     ObjectEnd, // </struct>
