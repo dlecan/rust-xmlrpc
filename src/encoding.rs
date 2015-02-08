@@ -35,6 +35,8 @@ use xml::reader::events;
 
 use std::old_io::BufferedReader;
 
+extern crate core;
+
 /// Represents an XML-RPC data value
 #[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub enum Xml {
@@ -117,7 +119,7 @@ pub fn encode<T: Encodable>(object: &T) -> string::String {
 
 impl fmt::Show for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        error_str(*self).fmt(f)
+         write!(f, "({})", error_str(*self))
     }
 }
 
@@ -127,13 +129,13 @@ fn io_error_to_error(old_io: old_io::IoError) -> ParserError {
 
 impl fmt::String for DecoderError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        error_str(*self).fmt(f)
+        write!(f, "({})", error_str(*self))
     }
 }
 
 impl fmt::String for ParserError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        error_str(*self).fmt(f)
+        write!(f, "({})", error_str(*self))
     }
 }
 
