@@ -912,14 +912,14 @@ impl<B: Buffer> Builder<B> {
 
     fn parse_i32_value(&self, s: &str) -> Option<XmlEvent> {
         match s.parse::<i32>() {
-            Some(n) => Some(XmlEvent::I32Value(n)),
-            None => None
+            Ok(n) => Some(XmlEvent::I32Value(n)),
+            Err(e) => None//Err(ParserError(e))
         }
     }
     fn parse_f64_value(&self, s: &str) -> Option<XmlEvent> {
         match s.parse::<f64>() {
-            Some(n) => Some(XmlEvent::F64Value(n)),
-            None => None
+            Ok(n) => Some(XmlEvent::F64Value(n)),
+            Err(e) => None//Err(ParserError(e))
         }
     }
     fn parse_string_value(&self, s: &str) -> Option<XmlEvent> {
@@ -1016,13 +1016,13 @@ macro_rules! read_primitive {
         fn $name(&mut self) -> DecodeResult<$ty> {
             match self.pop() {
                 Xml::I32(f) => match num::cast(f) {
-                    Some(f) => Ok(f),
-                    None => Err(ExpectedError("Number".to_string(), format!("{}", f))),
+                    Ok(f) => Ok(f),
+                    _ => Err(ExpectedError("Number".to_string(), format!("{}", f))),
                 },
                 Xml::F64(f) => Err(ExpectedError("Integer".to_string(), format!("{}", f))),
                 Xml::String(s) => match s.parse() {
-                    Some(f) => Ok(f),
-                    None => Err(ExpectedError("Number".to_string(), s)),
+                    Ok(f) => Ok(f),
+                    _ => Err(ExpectedError("Number".to_string(), s)),
                 },
                 value => Err(ExpectedError("Number".to_string(), format!("{}", value))),
             }
@@ -1058,8 +1058,8 @@ impl SerializeDecoder for Decoder {
                 // re: #12967.. a type w/ numeric keys (ie HashMap<usize, V> etc)
                 // is going to have a string here, as per JSON spec.
                 match s.parse() {
-                    Some(f) => Ok(f),
-                    None => Err(ExpectedError("Number".to_string(), s)),
+                    Ok(f) => Ok(f),
+                    _ => Err(ExpectedError("Number".to_string(), s)),
                 } 
             },
             Xml::Null => Ok(f64::NAN), // FIXME: does this exist for XML?
