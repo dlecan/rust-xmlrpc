@@ -129,13 +129,13 @@ fn io_error_to_error(old_io: old_io::IoError) -> ParserError {
 
 impl fmt::String for DecoderError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({})", error_str(*self))
+        write!(f, "TODO")
     }
 }
 
 impl fmt::String for ParserError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({})", error_str(*self))
+        write!(f, "TODO")
     }
 }
 
