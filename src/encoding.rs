@@ -388,8 +388,8 @@ impl<'a> SerializeEncoder for Encoder<'a> {
 
     //fn emit_map_elt_key<F>(&mut self, idx: usize, mut f: F) -> EncodeResult where
     // FIXME: implement
-    fn emit_map_elt_key<F>(&mut self, idx: usize, f: F) -> EncodeResult where
-        F: FnMut(&mut Encoder<'a>) -> EncodeResult,
+    fn emit_map_elt_key<F>(&mut self, idx: usize, f: F) -> EncodeResult// where
+        // F: FnMut(&mut Encoder<'a>) -> EncodeResult,
     {
         //if idx != 0 { try!(write!(self.writer, ",")) }
         //// ref #12967, make sure to wrap a key in double quotes,
