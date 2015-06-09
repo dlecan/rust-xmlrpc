@@ -12,9 +12,9 @@ name = "xmlrpc"
 path = "src/lib.rs"
 
 [dependencies]
-rustc-serialize = "0.2.7"
+rustc-serialize = "0.3"
 xml-rs = "0.1.12"
-hyper = "0.1.0"
+hyper = "0.5"
 
 [[example]]
 name = "simple"

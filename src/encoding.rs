@@ -18,11 +18,10 @@ use self::DecoderError::*;
 use std::collections::{HashMap, BTreeMap};
 use std::error::Error as StdError;
 use std::mem::{swap, transmute};
-use std::num::{Float, Int};
 use std::ops::Index;
 use std::str::{FromStr};
 use std::string;
-use std::{char, f64, fmt, old_io, num, str};
+use std::{char, io, f64, fmt, str};
 use std;
 
 use rustc_serialize::{Encodable, Decodable};
@@ -32,8 +31,6 @@ use rustc_serialize::Decoder as SerializeDecoder;
 use xml;
 use xml::EventReader;
 use xml::reader::events;
-
-use std::old_io::BufferedReader;
 
 extern crate core;
 
@@ -70,7 +67,7 @@ pub enum ErrorCode {
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
-    IoError(old_io::IoErrorKind, &'static str),
+    IoError(io::Error, &'static str),
 }
 
 // Builder and Parser have the same errors.
@@ -117,23 +114,23 @@ pub fn encode<T: Encodable>(object: &T) -> string::String {
     s
 }
 
-impl fmt::Show for ErrorCode {
+impl fmt::Debug for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
          write!(f, "({})", error_str(*self))
     }
 }
 
-fn io_error_to_error(old_io: old_io::IoError) -> ParserError {
-    ParserError::IoError(old_io.kind, old_io.desc)
+fn io_error_to_error(io: io::Error) -> ParserError {
+    ParserError::Error(io.kind, io.desc)
 }
 
-impl fmt::String for DecoderError{
+impl fmt::Display for DecoderError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "TODO")
     }
 }
 
-impl fmt::String for ParserError{
+impl fmt::Display for ParserError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "TODO")
     }
@@ -169,11 +166,11 @@ impl StdError for ParserError {
 pub type EncodeResult = fmt::Result;
 pub type DecodeResult<T> = Result<T, DecoderError>;
 
-fn escape_str(wr: &mut fmt::Writer, v: &str) -> fmt::Result {
+fn escape_str(wr: &mut fmt::Write, v: &str) -> fmt::Result {
     wr.write_str(xml::escape::escape_str(v).as_slice())
 }
 
-fn escape_char(writer: &mut fmt::Writer, v: char) -> fmt::Result {
+fn escape_char(writer: &mut fmt::Write, v: char) -> fmt::Result {
     let mut buf = [0; 4];
     let n = v.encode_utf8(&mut buf).unwrap();
     let buf = unsafe { str::from_utf8_unchecked(&buf[0..n]) };
@@ -182,13 +179,13 @@ fn escape_char(writer: &mut fmt::Writer, v: char) -> fmt::Result {
 
 /// A structure for implementing serialization to XML-RPC.
 pub struct Encoder<'a> {
-    writer: &'a mut (fmt::Writer+'a),
+    writer: &'a mut (fmt::Write+'a),
 }
 
 impl<'a> Encoder<'a> {
     /// Creates a new XML-RPC encoder whose output will be written to the writer
     /// specified.
-    pub fn new(writer: &'a mut fmt::Writer) -> Encoder<'a> {
+    pub fn new(writer: &'a mut fmt::Write) -> Encoder<'a> {
         Encoder { writer: writer }
     }
 }
@@ -445,7 +442,7 @@ impl Xml {
     pub fn from_str(s: &str) -> Result<Self, BuilderError> {
         //let mut builder = Builder::new(s.chars());
         //builder.build()
-        let rdr = old_io::MemReader::new(String::from_str(s).into_bytes());
+        let rdr = io::MemReader::new(String::from_str(s).into_bytes());
         let brdr = BufferedReader::new(rdr);
         let mut builder = Builder::new(brdr);
         builder.build()
@@ -1129,7 +1126,7 @@ impl SerializeDecoder for Decoder {
                 return Err(ExpectedError("String or Object".to_string(), format!("{}", xml)))
             }
         };
-        let idx = match names.iter().position(|n| *n == &name[]) {
+        let idx = match names.iter().position(|n| *n == &name) {
             Some(idx) => idx,
             None => return Err(UnknownVariantError(name))
         };
@@ -1416,13 +1413,13 @@ struct FormatShim<'a, 'b: 'a> {
     inner: &'a mut fmt::Formatter<'b>,
 }
 
-impl<'a, 'b> fmt::Writer for FormatShim<'a, 'b> {
+impl<'a, 'b> fmt::Write for FormatShim<'a, 'b> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.inner.write_str(s)
     }
 }
 
-impl fmt::String for Xml {
+impl fmt::Display for Xml {
     /// Encodes an XML value into a string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut shim = FormatShim { inner: f };
@@ -1431,7 +1428,7 @@ impl fmt::String for Xml {
     }
 }
 
-impl<'a, T: Encodable> fmt::String for AsXml<'a, T> {
+impl<'a, T: Encodable> fmt::Display for AsXml<'a, T> {
     /// Encodes an XML value into a string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut shim = FormatShim { inner: f };
