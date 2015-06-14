@@ -10,6 +10,7 @@
 
 use hyper;
 use std::string;
+use std::io::Read;
 
 pub struct Client {
     url: string::String,
@@ -25,8 +26,9 @@ impl Client {
         let mut result = http_client.post(self.url.as_str())
             .body(request.body.as_str()) // FIXME: use to_xml() somehow?
             .send();
-        let body = result.ok().unwrap().read_to_string().unwrap();
+        let mut body = String::new();    
+        result.ok().unwrap().read_to_string(&mut body);
         //println!("{}", response.unwrap());
-        Some(super::Response::new(body.as_slice())) // FIXME: change to a Result<> type
+        Some(super::Response::new(body.as_str())) // FIXME: change to a Result<> type
     }
 }
