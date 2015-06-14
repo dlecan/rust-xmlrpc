@@ -438,8 +438,7 @@ impl Xml {
         //let mut builder = Builder::new(s.chars());
         //builder.build()
         let cur = io::Cursor::new(s.as_bytes());
-        let rdr = io::BufReader::new(cur);
-        let mut builder = Builder::new(rdr);
+        let mut builder = Builder::new(cur);
         builder.build()
     }
 
