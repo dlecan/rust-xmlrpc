@@ -619,15 +619,15 @@ impl Xml {
 impl<'a> Index<&'a str>  for Xml {
     type Output = Xml;
 
-    fn index(&self, idx: & &str) -> &Xml {
-        self.find(*idx).unwrap()
+    fn index(&self, idx: &str) -> &Xml {
+        self.find(idx).unwrap()
     }
 }
 
 impl Index<usize> for Xml {
     type Output = Xml;
 
-    fn index<'a>(&'a self, idx: &usize) -> &'a Xml {
+    fn index<'a>(&'a self, idx: usize) -> &'a Xml {
         match self {
             &Xml::Array(ref v) => v.index(idx),
             _ => panic!("can only index XML with usize if it is an array")
