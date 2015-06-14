@@ -65,17 +65,17 @@ pub enum ErrorCode {
     EOFWhileParsingString,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
-    IoError(io::Error, &'static str),
+    IoError(io::ErrorKind, &'static str),
 }
 
 // Builder and Parser have the same errors.
 pub type BuilderError = ParserError;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub enum DecoderError {
     ParseError(ParserError),
     ExpectedError(string::String, string::String),
@@ -123,7 +123,7 @@ impl fmt::Debug for ErrorCode {
 }
 
 fn io_error_to_error(io: io::Error) -> ParserError {
-    ParserError::Error(io.kind, io.desc)
+    ParserError::IoError(io.kind(), io.description())
 }
 
 impl fmt::Display for DecoderError{
