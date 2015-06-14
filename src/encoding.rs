@@ -169,7 +169,7 @@ pub type EncodeResult = fmt::Result;
 pub type DecodeResult<T> = Result<T, DecoderError>;
 
 fn escape_str(wr: &mut fmt::Write, v: &str) -> fmt::Result {
-    wr.write_str(xml::escape::escape_str(v).as_slice())
+    wr.write_str(xml::escape::escape_str(v).as_ref())
 }
 
 fn escape_char(writer: &mut fmt::Write, v: char) -> fmt::Result {
