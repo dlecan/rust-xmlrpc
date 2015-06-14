@@ -33,6 +33,7 @@ use xml::EventReader;
 use xml::reader::events;
 
 extern crate core;
+extern crate num;
 
 /// Represents an XML-RPC data value
 #[derive(Clone, PartialEq, PartialOrd, Debug)]
