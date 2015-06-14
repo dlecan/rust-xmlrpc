@@ -31,7 +31,6 @@ use xml;
 use xml::EventReader;
 use xml::reader::events;
 
-extern crate core;
 extern crate num;
 
 /// Represents an XML-RPC data value
@@ -438,7 +437,7 @@ impl Xml {
     pub fn from_str(s: &str) -> Result<Self, BuilderError> {
         //let mut builder = Builder::new(s.chars());
         //builder.build()
-        let cur = io::Cursor::new(String::from_str(s).into_bytes());
+        let cur = io::Cursor::new(s.as_bytes());
         let rdr = io::BufReader::new(cur);
         let mut builder = Builder::new(rdr);
         builder.build()
@@ -534,7 +533,7 @@ impl Xml {
     /// Returns None otherwise.
     pub fn as_string<'a>(&'a self) -> Option<&'a str> {
         match *self {
-            Xml::String(ref s) => Some(s.as_str()),
+            Xml::String(ref s) => Some(&s),
             _ => None
         }
     }
@@ -704,13 +703,13 @@ impl<B: BufRead> Builder<B> {
         }
         self.token = match n {
             events::XmlEvent::StartElement { name, attributes: _, namespace: _ } => {
-                self.parse_tag_start(name.local_name.as_str())
+                self.parse_tag_start(&name.local_name)
             }
             events::XmlEvent::EndElement { name } => {
-                self.parse_tag_end(name.local_name.as_str())
+                self.parse_tag_end(&name.local_name)
             }
             events::XmlEvent::Characters(s) => {
-                self.parse_tag_characters(s.as_str(), &self.token)
+                self.parse_tag_characters(&s, &self.token)
             }
             events::XmlEvent::EndDocument => {
                 None

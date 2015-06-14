@@ -9,6 +9,7 @@
 // Rust XML-RPC library
 
 use std::string;
+use std::str;
 use rustc_serialize::{Encodable,Decodable};
 
 pub struct Request {
@@ -33,7 +34,7 @@ impl Request {
 
     pub fn argument<T: Encodable>(mut self, object: &T) -> Request {
         let append_body = format!("<param>{}</param>", super::encode(object));
-        self.body = self.body + append_body.as_str();
+        self.body = self.body + &append_body;
         self
     }
 
@@ -53,12 +54,17 @@ impl Response {
 
     pub fn result<T: Decodable>(&self, idx: usize) -> Option<T> {
         // FIXME: use idx
-        let resp = self.body.as_str(); 
+        let resp = &self.body; 
         let val0 = "<params>\n<param>\n<value>"; // FIXME: use xml-rs rather than manual search
         let idx0 = resp.find(val0).unwrap() + val0.len();
         let val1 = "</value>\n</param>\n</params>";
         let idx1 = resp.find(val1).unwrap();
-        let object: T = super::decode(resp.slice_chars(idx0,idx1)).unwrap();
+        let value_bytes = &resp.as_bytes()[idx0..idx1];
+        let s = match str::from_utf8(value_bytes) {
+        	Ok(v) => v,
+        	Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+    	};
+        let object: T = super::decode(s).unwrap();
         Some(object)
     }
 }
