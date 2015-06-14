@@ -444,7 +444,8 @@ impl Xml {
     pub fn from_str(s: &str) -> Result<Self, BuilderError> {
         //let mut builder = Builder::new(s.chars());
         //builder.build()
-        let rdr = io::BufReader::new(String::from_str(s).into_bytes());
+        let cur = io::Cursor::new(String::from_str(s).into_bytes());
+        let rdr = io::BufReader::new(cur);
         let mut builder = Builder::new(rdr);
         builder.build()
     }
