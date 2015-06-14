@@ -33,7 +33,7 @@ impl Request {
 
     pub fn argument<T: Encodable>(mut self, object: &T) -> Request {
         let append_body = format!("<param>{}</param>", super::encode(object));
-        self.body = self.body + append_body.as_slice();
+        self.body = self.body + append_body.as_str();
         self
     }
 

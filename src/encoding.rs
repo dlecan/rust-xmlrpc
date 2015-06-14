@@ -540,7 +540,7 @@ impl Xml {
     /// Returns None otherwise.
     pub fn as_string<'a>(&'a self) -> Option<&'a str> {
         match *self {
-            Xml::String(ref s) => Some(s.as_slice()),
+            Xml::String(ref s) => Some(s.as_str()),
             _ => None
         }
     }
@@ -709,13 +709,13 @@ impl<B: BufRead> Builder<B> {
         }
         self.token = match n {
             events::XmlEvent::StartElement { name, attributes: _, namespace: _ } => {
-                self.parse_tag_start(name.local_name.as_slice())
+                self.parse_tag_start(name.local_name.as_str())
             }
             events::XmlEvent::EndElement { name } => {
-                self.parse_tag_end(name.local_name.as_slice())
+                self.parse_tag_end(name.local_name.as_str())
             }
             events::XmlEvent::Characters(s) => {
-                self.parse_tag_characters(s.as_slice(), &self.token)
+                self.parse_tag_characters(s.as_str(), &self.token)
             }
             events::XmlEvent::EndDocument => {
                 None

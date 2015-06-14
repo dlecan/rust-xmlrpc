@@ -22,8 +22,8 @@ impl Client {
 
     pub fn remote_call(&self, request: &super::Request) -> Option<super::Response> {
         let mut http_client = hyper::Client::new();
-        let mut result = http_client.post(self.url.as_slice())
-            .body(request.body.as_slice()) // FIXME: use to_xml() somehow?
+        let mut result = http_client.post(self.url.as_str())
+            .body(request.body.as_str()) // FIXME: use to_xml() somehow?
             .send();
         let body = result.ok().unwrap().read_to_string().unwrap();
         //println!("{}", response.unwrap());
