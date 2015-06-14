@@ -19,11 +19,6 @@
 
 #![forbid(non_camel_case_types)]
 #![allow(missing_docs)]
-#![allow(unused_attributes)]
-#![allow(unstable)]
-#![allow(unused_variables)] // FIXME: remove
-#![allow(unused_imports)]
-#![feature(slicing_syntax)]
 
 /*!
 XML-RPC library, including both serialization and remote procedure calling

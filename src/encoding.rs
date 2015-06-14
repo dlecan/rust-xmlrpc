@@ -17,13 +17,11 @@ use self::DecoderError::*;
 
 use std::collections::{HashMap, BTreeMap};
 use std::error::Error as StdError;
-use std::mem::{swap, transmute};
 use std::ops::Index;
 use std::str::{FromStr};
 use std::string;
-use std::{char, io, f64, fmt, str};
+use std::{io, f64, fmt, str};
 use std::io::BufRead;
-use std;
 
 use rustc_serialize::{Encodable, Decodable};
 use rustc_serialize::Encoder as SerializeEncoder;
@@ -120,10 +118,6 @@ impl fmt::Debug for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
          write!(f, "({})", error_str(*self))
     }
-}
-
-fn io_error_to_error(io: io::Error) -> ParserError {
-    ParserError::IoError(io.kind(), io.description())
 }
 
 impl fmt::Display for DecoderError{
@@ -912,13 +906,13 @@ impl<B: BufRead> Builder<B> {
     fn parse_i32_value(&self, s: &str) -> Option<XmlEvent> {
         match s.parse::<i32>() {
             Ok(n) => Some(XmlEvent::I32Value(n)),
-            Err(e) => None//Err(ParserError(e))
+            Err(_) => None//Err(ParserError(e))
         }
     }
     fn parse_f64_value(&self, s: &str) -> Option<XmlEvent> {
         match s.parse::<f64>() {
             Ok(n) => Some(XmlEvent::F64Value(n)),
-            Err(e) => None//Err(ParserError(e))
+            Err(_) => None//Err(ParserError(e))
         }
     }
     fn parse_string_value(&self, s: &str) -> Option<XmlEvent> {
