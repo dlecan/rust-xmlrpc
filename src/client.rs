@@ -23,11 +23,11 @@ impl Client {
 
     pub fn remote_call(&self, request: &super::Request) -> Option<super::Response> {
         let mut http_client = hyper::Client::new();
-        let mut result = http_client.post(self.url.as_str())
+        let result = http_client.post(self.url.as_str())
             .body(request.body.as_str()) // FIXME: use to_xml() somehow?
             .send();
         let mut body = String::new();    
-        result.ok().unwrap().read_to_string(&mut body);
+        result.ok().unwrap().read_to_string(&mut body).ok().expect("could not read response");
         //println!("{}", response.unwrap());
         Some(super::Response::new(body.as_str())) // FIXME: change to a Result<> type
     }
