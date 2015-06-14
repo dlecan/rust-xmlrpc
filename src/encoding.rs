@@ -67,7 +67,7 @@ pub enum ErrorCode {
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
-    IoError(io::ErrorKind, &'static str),
+    IoError(io::ErrorKind, String),
 }
 
 // Builder and Parser have the same errors.
@@ -681,7 +681,8 @@ impl<B: BufRead> Builder<B> {
         self.bump();
         let result = self.build_value();
         self.bump();
-        match self.token {
+        let token = self.token.take();
+        match token {
             None => {}
             Some(XmlEvent::Error(e)) => { return Err(e); }
             ref tok => { panic!("unexpected token {:?}", tok.clone()); }
@@ -727,7 +728,8 @@ impl<B: BufRead> Builder<B> {
     */
 
     pub fn build_value(&mut self) -> Result<Xml, BuilderError> {
-        match self.token {
+    	let token = self.token.take();
+        match token {
             // all values must begin with opening tag
             Some(XmlEvent::ObjectStart) => self.build_object(),
             Some(XmlEvent::ArrayStart) => self.build_array(),

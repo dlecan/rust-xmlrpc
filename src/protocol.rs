@@ -53,7 +53,7 @@ impl Response {
 
     pub fn result<T: Decodable>(&self, idx: usize) -> Option<T> {
         // FIXME: use idx
-        let resp = self.body; 
+        let resp = self.body.as_str(); 
         let val0 = "<params>\n<param>\n<value>"; // FIXME: use xml-rs rather than manual search
         let idx0 = resp.find(val0).unwrap() + val0.len();
         let val1 = "</value>\n</param>\n</params>";
