@@ -166,9 +166,9 @@ fn escape_str(wr: &mut fmt::Write, v: &str) -> fmt::Result {
 }
 
 fn escape_char(writer: &mut fmt::Write, v: char) -> fmt::Result {
-    let mut buf = [0; 4];
-    let n = v.encode_utf8(&mut buf).unwrap();
-    let buf = unsafe { str::from_utf8_unchecked(&buf[0..n]) };
+	// TODO: check hack
+    let n = v.to_string();
+    let buf = unsafe { str::from_utf8_unchecked(n.as_bytes()) };
     escape_str(writer, buf)
 }
 
