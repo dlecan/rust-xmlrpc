@@ -1,7 +1,6 @@
-#![allow(unstable)]
 
 extern crate xmlrpc;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 //use rustc_serialize::Encodable;
 //use rustc_serialize::json;
 
@@ -14,7 +13,7 @@ fn main() {
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: String = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: String = xmlrpc::decode(&b).unwrap();
     println!("After decode: {}", c);
 
     println!("\n==== Char ====");
@@ -22,7 +21,7 @@ fn main() {
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: char = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: char = xmlrpc::decode(&b).unwrap();
     println!("After decode: {}", c);
 
     println!("\n==== Integer ====");
@@ -30,7 +29,7 @@ fn main() {
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: i32 = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: i32 = xmlrpc::decode(&b).unwrap();
     println!("After decode: {}", c);
 
     println!("\n==== Floating ====");
@@ -38,7 +37,7 @@ fn main() {
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: f64 = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: f64 = xmlrpc::decode(&b).unwrap();
     println!("After decode: {}", c);
 
     println!("\n==== Booleans ====");
@@ -46,14 +45,14 @@ fn main() {
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: bool = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: bool = xmlrpc::decode(&b).unwrap();
     println!("After decode: {}", c);
 
     let a = false;
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: bool = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: bool = xmlrpc::decode(&b).unwrap();
     println!("After decode: {}", c);
 
     println!("\n==== Int Vector ====");
@@ -61,7 +60,7 @@ fn main() {
     println!("Before encode: {:?}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: Vec<i32> = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: Vec<i32> = xmlrpc::decode(&b).unwrap();
     println!("After decode: {:?}", c);
 
     println!("\n==== Tuple ====");
@@ -69,12 +68,12 @@ fn main() {
     println!("Before encode: {:?}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: (String, f64) = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: (String, f64) = xmlrpc::decode(&b).unwrap();
     println!("After decode: {:?}", c);
 
 
     println!("\n==== Struct ====");
-    #[derive(Show,RustcEncodable,RustcDecodable)]
+    #[derive(Debug,RustcEncodable,RustcDecodable)]
     struct Person {
         name: String,
         age: i32,
@@ -83,7 +82,7 @@ fn main() {
     println!("Before encode: {:?}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: Person = xmlrpc::decode(b.as_slice()).unwrap();
+    let c: Person = xmlrpc::decode(&b).unwrap();
     println!("After decode: {:?}", c);
 
 
