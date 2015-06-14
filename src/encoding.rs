@@ -22,6 +22,7 @@ use std::ops::Index;
 use std::str::{FromStr};
 use std::string;
 use std::{char, io, f64, fmt, str};
+use std::io::BufRead;
 use std;
 
 use rustc_serialize::{Encodable, Decodable};
@@ -443,15 +444,14 @@ impl Xml {
     pub fn from_str(s: &str) -> Result<Self, BuilderError> {
         //let mut builder = Builder::new(s.chars());
         //builder.build()
-        let rdr = io::MemReader::new(String::from_str(s).into_bytes());
-        let brdr = BufferedReader::new(rdr);
-        let mut builder = Builder::new(brdr);
+        let rdr = io::BufReader::new(String::from_str(s).into_bytes());
+        let mut builder = Builder::new(rdr);
         builder.build()
     }
 
     // FIXME: this should give us a method to build objects from an existing xml parser
     // such as for interpreting xml requests
-    pub fn from_parser<B: Buffer>(p: xml::EventReader<B>) -> Result<Self, BuilderError> {
+    pub fn from_parser<B: BufRead>(p: xml::EventReader<B>) -> Result<Self, BuilderError> {
         let mut builder = Builder { parser: p, token: None };
         builder.build()
     }
@@ -670,12 +670,12 @@ pub enum XmlEvent {
     Error(ParserError) // FIXME: add error types
 }
 
-struct Builder<B: Buffer> {
+struct Builder<B: BufRead> {
     parser: EventReader<B>,
     token: Option<XmlEvent>,
 }
 
-impl<B: Buffer> Builder<B> {
+impl<B: BufRead> Builder<B> {
     /// Create an XML Builder.
     pub fn new(src: B) -> Builder<B> {
         Builder { parser: EventReader::new(src), token: None, }
