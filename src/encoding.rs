@@ -53,7 +53,7 @@ pub type Object = BTreeMap<string::String, Xml>;
 pub struct AsXml<'a, T: 'a> { inner: &'a T }
 
 /// The errors that can arise while parsing an XML stream.
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ErrorCode {
     InvalidSyntax,
     EOFWhileParsingObject,
@@ -62,11 +62,51 @@ pub enum ErrorCode {
     EOFWhileParsingString,
 }
 
+impl fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    	let str1 = match self {
+	        &InvalidSyntax => "invalid syntax",
+	        &EOFWhileParsingObject => "EOF While parsing object",
+	        &EOFWhileParsingArray => "EOF While parsing array",
+	        &EOFWhileParsingValue => "EOF While parsing value",
+	        &EOFWhileParsingString => "EOF While parsing string",
+    	};
+        write!(f, "({})", str1)
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
     IoError(io::ErrorKind, String),
+}
+
+impl fmt::Display for ParserError{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let str1 = match self {
+	        &SyntaxError(_,_,_) => "Syntax Error",
+	        &IoError(_,_) => "I/O Error",
+    	};
+        write!(f, "({})", str1)
+    }
+}
+
+// impl fmt::Display for ParserError {
+//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+//         fmt.write_str(error::Error::description(self))
+//     }
+// }
+
+impl StdError for ParserError {
+    fn description(&self) -> &str { "failed to parse xml" }
+    // fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
+//    fn cause(&self) -> Option<&StdError> {
+//    	match self {
+//    		&IoError(ioerr, _) => ioerr,
+//    		_ => None,
+//    	}
+//    }
 }
 
 // Builder and Parser have the same errors.
@@ -81,14 +121,33 @@ pub enum DecoderError {
     ApplicationError(string::String)
 }
 
-/// Returns a readable error string for a given error code.
-pub fn error_str(error: ErrorCode) -> &'static str {
-    match error {
-        InvalidSyntax => "invalid syntax",
-        EOFWhileParsingObject => "EOF While parsing object",
-        EOFWhileParsingArray => "EOF While parsing array",
-        EOFWhileParsingValue => "EOF While parsing value",
-        EOFWhileParsingString => "EOF While parsing string",
+impl fmt::Display for DecoderError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let str1 = match self {
+	        &ParseError(_) => "Parsing Error",
+	        &ExpectedError(_,_) => "EOF While parsing object",
+	        &MissingFieldError(_) => "EOF While parsing array",
+	        &UnknownVariantError(_) => "EOF While parsing value",
+	        &ApplicationError(_) => "EOF While parsing string",
+    	};
+        write!(f, "({})", str1)
+    }
+}
+
+// impl fmt::Display for DecoderError {
+//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+//         fmt.write_str(error::Error::description(self))
+//     }
+// }
+
+impl StdError for DecoderError {
+    fn description(&self) -> &str { "decoder error" }
+    // fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
+    fn cause(&self) -> Option<&StdError> {
+        match *self {
+            DecoderError::ParseError(ref e) => Some(e as &StdError),
+            _ => None,
+        }
     }
 }
 
@@ -111,51 +170,6 @@ pub fn encode<T: Encodable>(object: &T) -> string::String {
         let _ = object.encode(&mut encoder);
     }
     s
-}
-
-impl fmt::Debug for ErrorCode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-         write!(f, "({})", error_str(*self))
-    }
-}
-
-impl fmt::Display for DecoderError{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TODO")
-    }
-}
-
-impl fmt::Display for ParserError{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TODO")
-    }
-}
-
-// impl fmt::Display for DecoderError {
-//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-//         fmt.write_str(error::Error::description(self))
-//     }
-// }
-// impl fmt::Display for ParserError {
-//     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-//         fmt.write_str(error::Error::description(self))
-//     }
-// }
-
-impl StdError for DecoderError {
-    fn description(&self) -> &str { "decoder error" }
-    // fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
-    fn cause(&self) -> Option<&StdError> {
-        match *self {
-            DecoderError::ParseError(ref e) => Some(e as &StdError),
-            _ => None,
-        }
-    }
-}
-
-impl StdError for ParserError {
-    fn description(&self) -> &str { "failed to parse xml" }
-    // fn detail(&self) -> Option<std::string::String> { Some(format!("{:?}", self)) }
 }
 
 pub type EncodeResult = fmt::Result;
