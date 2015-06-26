@@ -75,18 +75,29 @@ impl fmt::Display for ErrorCode {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Debug)]
 pub enum ParserError {
     /// msg, line, col
     SyntaxError(ErrorCode, usize, usize),
-    IoError(io::ErrorKind, String),
+    IoError(io::Error),
+}
+
+impl PartialEq for ParserError {
+    fn eq(&self, other: &ParserError) -> bool {
+        match (self, other) {
+            (&SyntaxError(msg0, line0, col0), &SyntaxError(msg1, line1, col1)) =>
+                msg0 == msg1 && line0 == line1 && col0 == col1,
+            (&IoError(_), _) => false,
+            (_, &IoError(_)) => false,
+        }
+    }
 }
 
 impl fmt::Display for ParserError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let str1 = match self {
 	        &SyntaxError(_,_,_) => "Syntax Error",
-	        &IoError(_,_) => "I/O Error",
+	        &IoError(_) => "I/O Error",
     	};
         write!(f, "({})", str1)
     }
@@ -643,7 +654,7 @@ impl Index<usize> for Xml {
 }
 
 /// The output of the streaming parser.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Debug)]
 pub enum XmlEvent {
     ObjectStart, // <struct>
     ObjectEnd, // </struct>
@@ -714,6 +725,7 @@ impl<B: BufRead> Builder<B> {
             }
             n = self.parser.next();
         }
+        // FIXME: this cannot work. self.token is None when we enter parse_tag_*
         self.token = match n {
             events::XmlEvent::StartElement { name, attributes: _, namespace: _ } => {
                 self.parse_tag_start(&name.local_name)
