@@ -8,17 +8,16 @@
 
 // Rust XML-RPC library
 
-use std::string;
-use std::str;
 use rustc_serialize::{Encodable,Decodable};
+use ::encoding;
 
 pub struct Request {
-    pub method: string::String,
-    pub body: string::String,
+    pub method: String,
+    pub body: String,
 }
 
 pub struct Response {
-    pub body: string::String,
+    pub body: String,
 }
 
 impl Request {
@@ -33,7 +32,7 @@ impl Request {
     }
 
     pub fn argument<T: Encodable>(mut self, object: &T) -> Request {
-        let append_body = format!("<param>{}</param>", super::encode(object));
+        let append_body = format!("<param>{}</param>", encoding::encode(object));
         self.body = self.body + &append_body;
         self
     }
@@ -52,19 +51,52 @@ impl Response {
         }
     }
 
-    pub fn result<T: Decodable>(&self, idx: usize) -> Option<T> {
-        // FIXME: use idx
-        let resp = &self.body; 
-        let val0 = "<params>\n<param>\n<value>"; // FIXME: use xml-rs rather than manual search
-        let idx0 = resp.find(val0).unwrap() + val0.len();
-        let val1 = "</value>\n</param>\n</params>";
-        let idx1 = resp.find(val1).unwrap();
-        let value_bytes = &resp.as_bytes()[idx0..idx1];
-        let s = match str::from_utf8(value_bytes) {
-        	Ok(v) => v,
-        	Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-    	};
-        let object: T = super::decode(s).unwrap();
-        Some(object)
+    pub fn result<T: Decodable>(&self) -> Result<Vec<T>, encoding::DecoderError> {
+        encoding::decode(&self.body)
     }
+}
+
+#[derive(RustcDecodable, Debug)]
+struct TestObject {
+    key1: String,
+    key2: f64,
+    key3: bool,
+}
+
+#[test(decode)]
+fn test_decode() {
+  let res = Response { body: "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+                              <methodResponse>
+                              <params>
+                               <param>
+                                <value>
+                                 <struct>
+                                  <member>
+                                   <name>key1</name>
+                                   <value>
+                                    <string>string</string>
+                                   </value>
+                                  </member>
+                                  <member>
+                                   <name>key2</name>
+                                   <value>
+                                    <double>4.2</double>
+                                   </value>
+                                  </member>
+                                  <member>
+                                   <name>key3</name>
+                                   <value>
+                                    <boolean>1</boolean>
+                                   </value>
+                                  </member>
+                                 </struct>
+                                </value>
+                               </param>
+                              </params>
+                              </methodResponse>".into() };
+
+  //let res = res.result::<(String, i32, bool)>();
+
+  let res = res.result::<TestObject>();
+  println!("{:?}", res);
 }

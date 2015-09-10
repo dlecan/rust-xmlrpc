@@ -13,54 +13,54 @@ fn main() {
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: String = xmlrpc::decode(&b).unwrap();
-    println!("After decode: {}", c);
+    let c: Vec<String> = xmlrpc::decode(&b).unwrap();
+    println!("After decode: {:?}", c);
 
     println!("\n==== Char ====");
     let a: char = 'a';
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: char = xmlrpc::decode(&b).unwrap();
-    println!("After decode: {}", c);
+    let c: Vec<char> = xmlrpc::decode(&b).unwrap();
+    println!("After decode: {:?}", c);
 
     println!("\n==== Integer ====");
     let a = 18283i32;
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: i32 = xmlrpc::decode(&b).unwrap();
-    println!("After decode: {}", c);
+    let c: Vec<i32> = xmlrpc::decode(&b).unwrap();
+    println!("After decode: {:?}", c);
 
     println!("\n==== Floating ====");
     let a = 3.1415926;
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: f64 = xmlrpc::decode(&b).unwrap();
-    println!("After decode: {}", c);
+    let c: Vec<f64> = xmlrpc::decode(&b).unwrap();
+    println!("After decode: {:?}", c);
 
     println!("\n==== Booleans ====");
     let a = true;
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: bool = xmlrpc::decode(&b).unwrap();
-    println!("After decode: {}", c);
+    let c: Vec<bool> = xmlrpc::decode(&b).unwrap();
+    println!("After decode: {:?}", c);
 
     let a = false;
     println!("Before encode: {}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: bool = xmlrpc::decode(&b).unwrap();
-    println!("After decode: {}", c);
+    let c: Vec<bool> = xmlrpc::decode(&b).unwrap();
+    println!("After decode: {:?}", c);
 
     println!("\n==== Int Vector ====");
     let a = vec![1i32,2,3,4,5,6,7,8];
     println!("Before encode: {:?}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: Vec<i32> = xmlrpc::decode(&b).unwrap();
+    let c: Vec<Vec<i32>> = xmlrpc::decode(&b).unwrap();
     println!("After decode: {:?}", c);
 
     println!("\n==== Tuple ====");
@@ -68,7 +68,7 @@ fn main() {
     println!("Before encode: {:?}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: (String, f64) = xmlrpc::decode(&b).unwrap();
+    let c: Vec<(String, f64)> = xmlrpc::decode(&b).unwrap();
     println!("After decode: {:?}", c);
 
 
@@ -78,11 +78,12 @@ fn main() {
         name: String,
         age: i32,
     }
+
     let a = Person { name: "Dave".to_string(), age: 18 };
     println!("Before encode: {:?}", a);
     let b = xmlrpc::encode(&a);
     println!("After encode: {}", b);
-    let c: Person = xmlrpc::decode(&b).unwrap();
+    let c: Vec<Person> = xmlrpc::decode(&b).unwrap();
     println!("After decode: {:?}", c);
 
 
