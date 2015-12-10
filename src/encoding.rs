@@ -235,14 +235,14 @@ impl<'a> SerializeEncoder for Encoder<'a> {
     fn emit_f32(&mut self, v: f32) -> EncodeResult { self.emit_f64(v as f64) }
 
     fn emit_char(&mut self, v: char) -> EncodeResult {
-        try!(write!(self.writer, "<string>"));
+        try!(write!(self.writer, "<value><string>"));
         try!(escape_char(self.writer, v));
-        write!(self.writer, "</string>")
+        write!(self.writer, "</string></value>")
     }
     fn emit_str(&mut self, v: &str) -> EncodeResult {
-        try!(write!(self.writer, "<string>"));
+        try!(write!(self.writer, "<value><string>"));
 	try!(escape_str(self.writer, v));
-        write!(self.writer, "</string>")
+        write!(self.writer, "</string></value>")
     }
 
     fn emit_enum<F>(&mut self, _name: &str, f: F) -> EncodeResult where

@@ -9,6 +9,7 @@
 // Rust XML-RPC library
 
 use hyper;
+use hyper::header::Headers;
 use std::string;
 use std::io::Read;
 
@@ -23,10 +24,15 @@ impl Client {
 
     pub fn remote_call(&self, request: &super::Request) -> Option<super::Response> {
         let mut http_client = hyper::Client::new();
+        let mut headers = Headers::new();
+        headers.set_raw("Content-Type", vec![b"text/xml".to_vec()]);
+        headers.set_raw("User-Agent", vec![b"rust-xmlrpc".to_vec()]);
+
         let result = http_client.post(&self.url)
+            .headers(headers)
             .body(&request.body) // FIXME: use to_xml() somehow?
             .send();
-        let mut body = String::new();    
+        let mut body = String::new();
         result.ok().unwrap().read_to_string(&mut body).ok().expect("could not read response");
         //println!("{}", response.unwrap());
         Some(super::Response::new(&body)) // FIXME: change to a Result<> type
