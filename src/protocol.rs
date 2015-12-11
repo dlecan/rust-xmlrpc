@@ -11,11 +11,13 @@
 use rustc_serialize::{Encodable,Decodable};
 use ::encoding;
 
+#[derive(Debug)]
 pub struct Request {
     pub method: String,
     pub body: String,
 }
 
+#[derive(Debug)]
 pub struct Response {
     pub body: String,
 }
@@ -56,64 +58,68 @@ impl Response {
     }
 }
 
-#[derive(RustcDecodable, Debug)]
-struct TestObject {
-    key1: String,
-    key2: f64,
-    key3: bool,
-}
+#[cfg(test)]
+mod tests {
 
-#[test(encoding)]
-fn test_encode() {
+    #[derive(RustcDecodable, Debug)]
+    struct TestObject {
+        key1: String,
+        key2: f64,
+        key3: bool,
+    }
 
-    let expected = "<?xml version=\"1.0\"?><methodCall><methodName>method_name_value</methodName><params><param><value><string>string_value</string></value></param><param><value><double>4.2</double></value></param><param><value><boolean>1</boolean></value></param></params></methodCall>";
+    #[test]
+    fn test_encode() {
 
-    let mut request = Request::new("method_name_value");
-    request = request.argument(&"string_value".to_string());
-    request = request.argument(&4.2);
-    request = request.argument(&true);
-    request = request.finalize();
-    println!("Encoded body: {:?}", request.body);
+        let expected = "<?xml version=\"1.0\"?><methodCall><methodName>method_name_value</methodName><params><param><value><string>string_value</string></value></param><param><value><double>4.2</double></value></param><param><value><boolean>1</boolean></value></param></params></methodCall>";
 
-    assert_eq!(expected, &*request.body);
-}
+        let mut request = super::Request::new("method_name_value");
+        request = request.argument(&"string_value".to_string());
+        request = request.argument(&4.2);
+        request = request.argument(&true);
+        request = request.finalize();
+        println!("Encoded body: {:?}", request.body);
 
-#[test(encoding)]
-fn test_decode() {
-  let response = Response { body: "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-                              <methodResponse>
-                              <params>
-                               <param>
-                                <value>
-                                 <struct>
-                                  <member>
-                                   <name>key1</name>
-                                   <value>
-                                    <string>string_value</string>
-                                   </value>
-                                  </member>
-                                  <member>
-                                   <name>key2</name>
-                                   <value>
-                                    <double>4.2</double>
-                                   </value>
-                                  </member>
-                                  <member>
-                                   <name>key3</name>
-                                   <value>
-                                    <boolean>1</boolean>
-                                   </value>
-                                  </member>
-                                 </struct>
-                                </value>
-                               </param>
-                              </params>
-                              </methodResponse>".into() };
+        assert_eq!(expected, &*request.body);
+    }
 
-  let result = &response.result::<TestObject>().ok().unwrap()[0];
-  println!("Decoded result: {:?}", result);
+    #[test]
+    fn test_decode() {
+      let response = super::Response { body: "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+                                  <methodResponse>
+                                  <params>
+                                   <param>
+                                    <value>
+                                     <struct>
+                                      <member>
+                                       <name>key1</name>
+                                       <value>
+                                        <string>string_value</string>
+                                       </value>
+                                      </member>
+                                      <member>
+                                       <name>key2</name>
+                                       <value>
+                                        <double>4.2</double>
+                                       </value>
+                                      </member>
+                                      <member>
+                                       <name>key3</name>
+                                       <value>
+                                        <boolean>1</boolean>
+                                       </value>
+                                      </member>
+                                     </struct>
+                                    </value>
+                                   </param>
+                                  </params>
+                                  </methodResponse>".into() };
 
-  assert_eq!("string_value".to_string(), result.key1);
-  assert_eq!(4.2, result.key2);
-  assert_eq!(true, result.key3);
+      let result = &response.result::<TestObject>().ok().unwrap()[0];
+      println!("Decoded result: {:?}", result);
+
+      assert_eq!("string_value".to_string(), result.key1);
+      assert_eq!(4.2, result.key2);
+      assert_eq!(true, result.key3);
+    }
 }
