@@ -220,17 +220,17 @@ impl<'a> SerializeEncoder for Encoder<'a> {
     fn emit_i64(&mut self, v: i64) -> EncodeResult { self.emit_i32(v as i32) }
     fn emit_i32(&mut self, v: i32) -> EncodeResult { // XML-RPC only supports 4-byte signed integer
         // FIXME, precondition numbers to check range
-        write!(self.writer, "<int>{}</int>", v)
+        write!(self.writer, "<value><int>{}</int></value>", v)
     }
     fn emit_i16(&mut self, v: i16) -> EncodeResult { self.emit_i32(v as i32) }
     fn emit_i8(&mut self, v: i8) -> EncodeResult { self.emit_i32(v as i32) }
 
     fn emit_bool(&mut self, v: bool) -> EncodeResult {
-        write!(self.writer, "<boolean>{}</boolean>", v as u8)
+        write!(self.writer, "<value><boolean>{}</boolean></value>", v as u8)
     }
 
     fn emit_f64(&mut self, v: f64) -> EncodeResult {
-        write!(self.writer, "<double>{}</double>", v)
+        write!(self.writer, "<value><double>{}</double></value>", v)
     }
     fn emit_f32(&mut self, v: f32) -> EncodeResult { self.emit_f64(v as f64) }
 
