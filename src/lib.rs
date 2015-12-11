@@ -41,6 +41,9 @@ extern crate rustc_serialize;
 extern crate xml;
 extern crate hyper;
 
+#[macro_use]
+extern crate log;
+
 pub use encoding::{encode,decode,Encoder,Decoder,Xml};
 pub use client::{Client};
 pub use protocol::{Request,Response};
