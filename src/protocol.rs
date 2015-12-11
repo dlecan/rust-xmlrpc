@@ -63,7 +63,22 @@ struct TestObject {
     key3: bool,
 }
 
-#[test(decode)]
+#[test(encoding)]
+fn test_encode() {
+
+    let expected = "<?xml version=\"1.0\"?><methodCall><methodName>method_name_value</methodName><params><param><value><string>string_value</string></value></param><param><value><double>4.2</double></value></param><param><value><boolean>1</boolean></value></param></params></methodCall>";
+
+    let mut request = Request::new("method_name_value");
+    request = request.argument(&"string_value".to_string());
+    request = request.argument(&4.2);
+    request = request.argument(&true);
+    request = request.finalize();
+    println!("Encoded body: {:?}", request.body);
+
+    assert_eq!(expected, &*request.body);
+}
+
+#[test(encoding)]
 fn test_decode() {
   let response = Response { body: "<?xml version=\"1.0\" encoding=\"utf-8\"?>
                               <methodResponse>
@@ -96,7 +111,7 @@ fn test_decode() {
                               </methodResponse>".into() };
 
   let result = &response.result::<TestObject>().ok().unwrap()[0];
-  println!("{:?}", result);
+  println!("Decoded result: {:?}", result);
 
   assert_eq!("string_value".to_string(), result.key1);
   assert_eq!(4.2, result.key2);
