@@ -23,7 +23,7 @@ impl Client {
     }
 
     pub fn remote_call(&self, request: &super::Request) -> Option<super::Response> {
-        let mut http_client = hyper::Client::new();
+        let http_client = hyper::Client::new();
         let mut headers = Headers::new();
         headers.set_raw("Content-Type", vec![b"text/xml".to_vec()]);
         headers.set_raw("User-Agent", vec![b"rust-xmlrpc".to_vec()]);
