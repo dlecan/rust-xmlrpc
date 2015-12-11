@@ -39,7 +39,7 @@ impl Client {
         let mut body = String::new();
         response.ok().unwrap().read_to_string(&mut body).ok().expect("could not read response");
 
-        trace!("Repons body: {}", &body);
+        trace!("Reponse body: {}", &body);
 
         Some(super::Response::new(&body)) // FIXME: change to a Result<> type
     }
