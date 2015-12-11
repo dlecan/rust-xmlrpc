@@ -65,7 +65,7 @@ struct TestObject {
 
 #[test(decode)]
 fn test_decode() {
-  let res = Response { body: "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+  let response = Response { body: "<?xml version=\"1.0\" encoding=\"utf-8\"?>
                               <methodResponse>
                               <params>
                                <param>
@@ -74,7 +74,7 @@ fn test_decode() {
                                   <member>
                                    <name>key1</name>
                                    <value>
-                                    <string>string</string>
+                                    <string>string_value</string>
                                    </value>
                                   </member>
                                   <member>
@@ -95,8 +95,10 @@ fn test_decode() {
                               </params>
                               </methodResponse>".into() };
 
-  //let res = res.result::<(String, i32, bool)>();
+  let result = &response.result::<TestObject>().ok().unwrap()[0];
+  println!("{:?}", result);
 
-  let res = res.result::<TestObject>();
-  println!("{:?}", res);
+  assert_eq!("string_value".to_string(), result.key1);
+  assert_eq!(4.2, result.key2);
+  assert_eq!(true, result.key3);
 }
