@@ -30,6 +30,9 @@ use xml;
 use xml::EventReader;
 use xml::reader::{events, ParserConfig};
 
+use chrono::DateTime as ChronoDateTime;
+use chrono::Local;
+
 extern crate num;
 
 /// Represents an XML-RPC data value
@@ -42,7 +45,7 @@ pub enum Xml {
      Array(self::Array),
      Object(self::Object),
      Base64(Vec<u8>), // FIXME: added for xml-rpc, not in JSON
-     DateTime, // FIXME: need to implement
+     DateTime(XmlRpcDateTime),
      Null,
 }
 
@@ -59,6 +62,7 @@ pub enum ErrorCode {
     EOFWhileParsingArray,
     EOFWhileParsingValue,
     EOFWhileParsingString,
+    EOFWhileParsingDateTime,
 }
 
 impl fmt::Display for ErrorCode {
@@ -69,6 +73,7 @@ impl fmt::Display for ErrorCode {
 	        &EOFWhileParsingArray => "EOF While parsing array",
 	        &EOFWhileParsingValue => "EOF While parsing value",
 	        &EOFWhileParsingString => "EOF While parsing string",
+            &EOFWhileParsingDateTime => "EOF While parsing daetime",
     	};
         write!(f, "({})", str1)
     }
@@ -204,6 +209,11 @@ impl<'a> Encoder<'a> {
     pub fn new(writer: &'a mut fmt::Write) -> Encoder<'a> {
         Encoder { writer: writer }
     }
+
+    fn emit_datetime(&mut self, v: XmlRpcDateTime) -> EncodeResult {
+        write!(self.writer, "<value><dateTime.iso8601>{}</dateTime.iso8601></value>", v)
+    }
+
 }
 
 impl<'a> SerializeEncoder for Encoder<'a> {
@@ -229,6 +239,10 @@ impl<'a> SerializeEncoder for Encoder<'a> {
         write!(self.writer, "<value><boolean>{}</boolean></value>", v as u8)
     }
 
+    // fn emit_datetime(&mut self, v: XmlRpcDateTime) -> EncodeResult {
+    //     write!(self.writer, "<value><dateTime.iso8601>{}</dateTime.iso8601></value>", v)
+    // }
+
     fn emit_f64(&mut self, v: f64) -> EncodeResult {
         write!(self.writer, "<value><double>{}</double></value>", v)
     }
@@ -241,7 +255,7 @@ impl<'a> SerializeEncoder for Encoder<'a> {
     }
     fn emit_str(&mut self, v: &str) -> EncodeResult {
         try!(write!(self.writer, "<value><string>"));
-	try!(escape_str(self.writer, v));
+	   try!(escape_str(self.writer, v));
         write!(self.writer, "</string></value>")
     }
 
@@ -437,6 +451,7 @@ impl Encodable for Xml {
             Xml::F64(v) => v.encode(e),
             Xml::String(ref v) => v.encode(e),
             Xml::Boolean(v) => v.encode(e),
+//            Xml::DateTime(ref v) => v.encode(e),
             Xml::Array(ref v) => v.encode(e),
             Xml::Object(ref v) => v.encode(e), // FIXME: had to add hardcoded
                                                // impl for BTreeMap
@@ -615,6 +630,20 @@ impl Xml {
         }
     }
 
+    /// Returns true if the Xml value is a DateTime. Returns false otherwise.
+    pub fn is_datetime(&self) -> bool {
+        self.as_datetime().is_some()
+    }
+
+    /// If the Xml value is a DateTime, returns the associated datetime.
+    /// Returns None otherwise.
+    pub fn as_datetime<'a>(&'a self) -> Option<&'a XmlRpcDateTime> {
+        match self {
+            &Xml::DateTime(ref d) => Some(&d),
+            _ => None
+        }
+    }
+
     /// Returns true if the XML value is a Null. Returns false otherwise.
     pub fn is_null(&self) -> bool {
         self.as_null().is_some()
@@ -688,6 +717,9 @@ pub enum XmlEvent {
     NullStart, // <nil/>
     NullEnd, // <nil/>
     // FIXME: datetime
+    DateTimeStart, // <dateTime.iso8601>
+    DateTimeValue(XmlRpcDateTime),
+    DateTimeEnd, // </dateTime.iso8601>
     // FIXME: Base64
     Error(ParserError) // FIXME: add error types
 }
@@ -835,6 +867,7 @@ impl<B: BufRead> Builder<B> {
             Some(XmlEvent::F64Start) => self.build_f64(),
             Some(XmlEvent::BooleanStart) => self.build_boolean(),
             Some(XmlEvent::StringStart) => self.build_string(),
+            Some(XmlEvent::DateTimeStart) => self.build_datetime(),
             // error otherwise
             Some(XmlEvent::ObjectEnd) => Err(SyntaxError(InvalidSyntax, "Got ObjectEnd".into())),
             Some(XmlEvent::ArrayEnd) => Err(SyntaxError(InvalidSyntax, "Got ArrayEnd".into())),
@@ -856,6 +889,8 @@ impl<B: BufRead> Builder<B> {
             Some(XmlEvent::BooleanValue(_)) => Err(SyntaxError(InvalidSyntax, "Got BooleanValue".into())),
             Some(XmlEvent::StringValue(_)) => Err(SyntaxError(InvalidSyntax, "Got StringValue".into())),
             Some(XmlEvent::NameValue(_)) => Err(SyntaxError(InvalidSyntax, "Got NameValue".into())),
+            Some(XmlEvent::DateTimeValue(_)) => Err(SyntaxError(InvalidSyntax, "Got DateTimeValue".into())),
+            Some(XmlEvent::DateTimeEnd) => Err(SyntaxError(InvalidSyntax, "Got DateTimeEnd".into())),
             Some(XmlEvent::Error(e)) => Err(e),
             None => Err(SyntaxError(EOFWhileParsingValue, "Got None".into())),
             _ => Err(SyntaxError(EOFWhileParsingValue, "Unknown error".into())),
@@ -957,6 +992,19 @@ impl<B: BufRead> Builder<B> {
         }
     }
 
+    fn build_datetime(&mut self) -> Result<Xml, BuilderError> {
+        self.set_self_next_token_state();
+        let val = match self.token {
+            Some(XmlEvent::DateTimeValue(ref d)) => Ok(Xml::DateTime(*d)),
+            _ => Err(syntax_error_for_token(&self.token)),
+        };
+        self.set_self_next_token_state();
+        match self.token {
+            Some(XmlEvent::DateTimeEnd) => val,
+            _ => Err(syntax_error_for_token(&self.token)),
+        }
+    }
+
     fn build_i32(&mut self) -> Result<Xml, BuilderError> {
         self.set_self_next_token_state();
         let val = match self.token {
@@ -1005,6 +1053,13 @@ impl<B: BufRead> Builder<B> {
         }
     }
 
+    fn parse_datetime_value(&self, s: &str) -> Option<XmlEvent> {
+        match s.parse::<XmlRpcDateTime>() {
+            Ok(d) => Some(XmlEvent::DateTimeValue(d)),
+            Err(_) => None//Err(ParserError(e))
+        }
+    }
+
     fn parse_i32_value(&self, s: &str) -> Option<XmlEvent> {
         match s.parse::<i32>() {
             Ok(n) => Some(XmlEvent::I32Value(n)),
@@ -1039,6 +1094,7 @@ impl<B: BufRead> Builder<B> {
             "int" => Some(XmlEvent::I32Start),
             "double" => Some(XmlEvent::F64Start),
             "string" => Some(XmlEvent::StringStart),
+            "dateTime.iso8601" => Some(XmlEvent::DateTimeStart),
             "nil" => Some(XmlEvent::NullStart),
             _ => None,
         }
@@ -1060,6 +1116,7 @@ impl<B: BufRead> Builder<B> {
             "int" => Some(XmlEvent::I32End),
             "double" => Some(XmlEvent::F64End),
             "string" => Some(XmlEvent::StringEnd),
+            "dateTime.iso8601" => Some(XmlEvent::DateTimeEnd),
             "nil" => Some(XmlEvent::NullEnd),
             _ => None,
         }
@@ -1071,6 +1128,7 @@ impl<B: BufRead> Builder<B> {
             &Some(XmlEvent::I32Start) => self.parse_i32_value(s),
             &Some(XmlEvent::F64Start) => self.parse_f64_value(s),
             &Some(XmlEvent::StringStart) => self.parse_string_value(s),
+            &Some(XmlEvent::DateTimeStart) => self.parse_datetime_value(s),
             &Some(XmlEvent::NameStart) => self.parse_name_value(s),
             _ => None,
         }
@@ -1193,6 +1251,11 @@ impl SerializeDecoder for Decoder {
         let val = self.pop();
         expect!(val, String)
     }
+
+    // fn read_datetime(&mut self) -> DecodeResult<XmlRpcDateTime> {
+    //     let val = self.pop();
+    //     expect!(val, ChronoDateTime)
+    // }
 
     fn read_enum<T, F>(&mut self, _name: &str, f: F) -> DecodeResult<T> where
         F: FnOnce(&mut Decoder) -> DecodeResult<T>,
@@ -1450,6 +1513,10 @@ impl ToXml for String {
     fn to_xml(&self) -> Xml { Xml::String((*self).clone()) }
 }
 
+impl ToXml for XmlRpcDateTime {
+    fn to_xml(&self) -> Xml { Xml::DateTime((*self).clone()) }
+}
+
 macro_rules! tuple_impl {
     // use variables to indicate the arity of the tuple
     ($($tyvar:ident),* ) => {
@@ -1554,6 +1621,34 @@ impl FromStr for Xml {
     }
 }
 */
+
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
+struct XmlRpcDateTime {
+    date_time: ChronoDateTime<Local>
+}
+
+impl fmt::Display for XmlRpcDateTime {
+    /// Encodes an XML value into a string
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut shim = FormatShim { inner: f };
+        let mut encoder = Encoder::new(&mut shim);
+        self.encode(&mut encoder)
+    }
+}
+
+impl FromStr for XmlRpcDateTime {
+    type Err = fmt::Error;
+    fn from_str(s: &str) -> Result<XmlRpcDateTime, fmt::Error> {
+        unimplemented!();
+//        decode(s).map(|vec| &vec[0])
+    }
+}
+
+// impl Encodable for XmlRpcDateTime {
+//     fn encode<S: SerializeEncoder>(&self, s: &mut S) -> Result<(), S::Error> {
+//         s.emit_datetime(self)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

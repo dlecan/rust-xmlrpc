@@ -17,6 +17,7 @@ xml-rs = "0.1.26"
 hyper = "*"
 num = "*"
 log = "*"
+chrono = "0.2"
 
 [[example]]
 name = "simple"

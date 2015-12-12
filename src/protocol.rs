@@ -122,4 +122,39 @@ mod tests {
       assert_eq!(4.2, result.key2);
       assert_eq!(true, result.key3);
     }
+
+    #[derive(RustcDecodable, Debug)]
+    struct DomainInfo {
+        is_premium: bool
+    }
+
+    #[test]
+    fn test_complex_decode() {
+      let response = super::Response { body: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<methodResponse>
+  <params>
+    <param>
+      <value>
+        <struct>
+          <member>
+            <name>date_updated</name>
+            <value>
+              <dateTime.iso8601>20151121T18:58:54</dateTime.iso8601>
+            </value>
+          </member>
+          <member>
+            <name>is_premium</name>
+            <value>
+              <boolean>0</boolean>
+            </value>
+          </member>
+        </struct>
+      </value>
+    </param>
+  </params>
+</methodResponse>".into() };
+
+      let result = &response.result::<DomainInfo>().ok().unwrap()[0];
+      println!("Decoded result: {:?}", result);
+    }
 }

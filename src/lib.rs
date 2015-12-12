@@ -44,6 +44,8 @@ extern crate hyper;
 #[macro_use]
 extern crate log;
 
+extern crate chrono;
+
 pub use encoding::{encode,decode,Encoder,Decoder,Xml};
 pub use client::{Client};
 pub use protocol::{Request,Response};
